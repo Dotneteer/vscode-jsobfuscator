@@ -13,6 +13,8 @@ This is a sample VS Code extension to demonstrate JavaScript code obfuscation.
 
 The obfuscation is based on the [javascript-obfuscator plugin](https://github.com/javascript-obfuscator/javascript-obfuscator).
 
+![Demo screenshot](./docs/demo.gif)
+
 ## Code structure
 
 The extension is written in TypeScript; it contains four fundamental files:
@@ -200,3 +202,8 @@ This part of `package.json` takes care of the VS Code integration:
         }
     }
 
+## Useful links:
+- [TypeScript](https://www.typescriptlang.org/)
+- [Visual Studio Code Extensibility](https://code.visualstudio.com/docs/extensions/overview)
+- [Extensibility Samples](https://code.visualstudio.com/docs/extensions/samples)
+- [Extensibility Reference](https://code.visualstudio.com/docs/extensionAPI/overview)
