@@ -7,7 +7,7 @@ import ObfuscatedContentProvider, { encodeLocation } from './obfuscatedContentPr
 // This code activates the obfuscator component
 export function activate(context: ExtensionContext) {
 
-	const provider = new ObfuscatedContentProvider(obfuscateCode);
+	const provider = new ObfuscatedContentProvider();
 
 	// --- Our extension uses ObfuscatedContentProvider to display a
     // --- virtual document, thus here we register it
@@ -19,7 +19,7 @@ export function activate(context: ExtensionContext) {
     // --- 'preemptiveObfuscator.obfuscate' command, thus here we register the
     // --- command event handler
     let commandRegistration = commands.registerTextEditorCommand('preemptiveObfuscator.obfuscate', editor => {
-        const uri = encodeLocation(editor.document.uri);
+        const uri = encodeLocation(editor.document);
 		return workspace.openTextDocument(uri).then(doc => window.showTextDocument(doc, editor.viewColumn + 1))
     });
 
@@ -33,28 +33,4 @@ export function activate(context: ExtensionContext) {
 
 // We have nothing to do when this extension is deactivated
 export function deactivate() {
-}
-
-// This function does the obfuscation
-function obfuscateCode() : string {
-    var JavaScriptObfuscator = require('javascript-obfuscator');
-    const obfuscationResult = JavaScriptObfuscator.obfuscate(
-        `
-            var variable1 = '5' - 3;
-            var variable2 = '5' + 3;
-            var variable3 = '5' + - '2';
-            console.log(variable1);
-            console.log(variable2);
-            console.log(variable3);
-        `,
-        {
-            compact: false,
-            controlFlowFlattening: true,
-            disableConsoleOutput: false
-        }
-    );
-        
-    var obfuscated = obfuscationResult.getObfuscatedCode();
-    console.log(obfuscated);
-    return obfuscated;
 }

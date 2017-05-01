@@ -1,50 +1,51 @@
 'use strict';
 
-import * as vscode from 'vscode';
+import {TextDocumentContentProvider, EventEmitter, Uri, Disposable} from 'vscode';
+import {workspace, window, TextDocument} from 'vscode';
 import ObfuscatedDocument from './obfuscatedDocument';
 
-export default class ObfuscatedContentProvider implements vscode.TextDocumentContentProvider {
-
+// This provider allows to display the obfuscated content in a separate
+// read-only editor pane
+export default class ObfuscatedContentProvider implements TextDocumentContentProvider {
+	// --- We use the JavaScript scheme for proper syntax highlighting
 	static scheme = 'javascript';
 
-	private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
+	private _onDidChange = new EventEmitter<Uri>();
 	private _documents = new Map<string, ObfuscatedDocument>();
-	private _subscriptions: vscode.Disposable;
+	private _subscriptions: Disposable;
 
-	constructor(private _obfuscator: () => string) {
-
-		// Listen to the `closeTextDocument`-event which means we must
-		// clear the corresponding model object - `ReferencesDocument`
-		this._subscriptions = vscode.workspace.onDidCloseTextDocument(doc => this._documents.delete(doc.uri.toString()));
+	constructor() {
+		this._subscriptions = workspace.onDidCloseTextDocument(doc => this._documents.delete(doc.uri.toString()));
 	}
 
+    // Let's dispose all used resource when the content provider gets disposed
 	dispose() {
 		this._subscriptions.dispose();
 		this._documents.clear();
 		this._onDidChange.dispose();
 	}
 
+	// We implement TextDocumentContentProvider.onDidChange to specify how
+	// to respond to document changes
 	get onDidChange() {
 		return this._onDidChange.event;
 	}
 
-	provideTextDocumentContent(uri: vscode.Uri): string | Thenable<string> {
-
-		// already loaded?
+	// We implement TextDocumentContentProvider.provideTextDocumentContent to
+	// specify the obfuscated content 
+	provideTextDocumentContent(uri: Uri): string | Thenable<string> {
+		// --- Is this document already loaded?
 		let document = this._documents.get(uri.toString());
 		if (document) {
-			return document.value;
+			return document.obfuscatedText;
 		}
-
-		document = new ObfuscatedDocument(uri, this._obfuscator());
+		document = new ObfuscatedDocument(window.activeTextEditor.document);
 		this._documents.set(uri.toString(), document);
-		return document.value;
+		return document.obfuscatedText;
 	}
 }
 
-let seq = 0;
-
-export function encodeLocation(uri: vscode.Uri): vscode.Uri {
-	const query = JSON.stringify(uri.toString());
-	return vscode.Uri.parse(`${ObfuscatedContentProvider.scheme}:Obfuscated.js?${query}#${seq++}`);
+// Creates the uri that represents the obfuscated form op the document.
+export function encodeLocation(document: TextDocument): Uri {
+	return Uri.parse(`${ObfuscatedContentProvider.scheme}:${document.uri}`);
 }
